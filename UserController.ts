@@ -28,7 +28,7 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     searchParam,
     pageNumber,
     companyId,
-    profile,
+    profile
   });
 
   return res.json({ users, count, hasMore });
@@ -41,7 +41,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     name,
     profile,
     companyId: bodyCompanyId,
-    queueIds,
+    queueIds
   } = req.body;
   let userCompanyId: number | null = null;
 
@@ -65,13 +65,13 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     name,
     profile,
     companyId: bodyCompanyId || userCompanyId,
-    queueIds,
+    queueIds
   });
 
   const io = getIO();
   io.emit(`company-${userCompanyId}-user`, {
     action: "create",
-    user,
+    user
   });
 
   return res.status(200).json(user);
@@ -85,38 +85,38 @@ export const show = async (req: Request, res: Response): Promise<Response> => {
   return res.status(200).json(user);
 };
 
-export const update = async (req: Request, res: Response): Promise<Response> => {
-  const { id: requestUserId, profile, companyId } = req.user;
-  const { userId } = req.params;
-  const userData = req.body;
-
-  // Permitir que usuários comuns mudem suas senhas
-  if (profile !== "admin" && requestUserId !== userId) {
-    // Aqui você deve garantir que apenas a senha seja atualizada
-    if (userData.profile) {
-      throw new AppError("ERR_NO_PERMISSION", 403);
-    }
-  } else if (profile !== "admin") {
+export const update = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  if (req.user.profile !== "user") {
     throw new AppError("ERR_NO_PERMISSION", 403);
   }
+
+  const { id: requestUserId, companyId } = req.user;
+  const { userId } = req.params;
+  const userData = req.body;
 
   const user = await UpdateUserService({
     userData,
     userId,
     companyId,
-    requestUserId: +requestUserId,
+    requestUserId: +requestUserId
   });
 
   const io = getIO();
   io.emit(`company-${companyId}-user`, {
     action: "update",
-    user,
+    user
   });
 
   return res.status(200).json(user);
 };
 
-export const remove = async (req: Request, res: Response): Promise<Response> => {
+export const remove = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const { userId } = req.params;
   const { companyId } = req.user;
 
@@ -129,7 +129,7 @@ export const remove = async (req: Request, res: Response): Promise<Response> => 
   const io = getIO();
   io.emit(`company-${companyId}-user`, {
     action: "delete",
-    userId,
+    userId
   });
 
   return res.status(200).json({ message: "User deleted" });
@@ -140,8 +140,9 @@ export const list = async (req: Request, res: Response): Promise<Response> => {
   const { companyId: userCompanyId } = req.user;
 
   const users = await SimpleListService({
-    companyId: companyId ? +companyId : userCompanyId,
+    companyId: companyId ? +companyId : userCompanyId
   });
 
   return res.status(200).json(users);
 };
+
